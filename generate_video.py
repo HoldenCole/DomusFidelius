@@ -28,7 +28,7 @@ except ImportError:
 
 try:
     from moviepy import (
-        AudioFileClip, CompositeVideoClip,
+        VideoClip, AudioFileClip, CompositeVideoClip,
         ColorClip, ImageClip,
         concatenate_audioclips,
     )
@@ -229,7 +229,7 @@ def make_ken_burns_clip(image_path: Path, duration: float,
         return crop_and_resize(img_array, cx, cy, crop_w, crop_h,
                                VIDEO_WIDTH, VIDEO_HEIGHT)
 
-    clip = ImageClip(make_frame, duration=duration).with_fps(FPS)
+    clip = VideoClip(make_frame, duration=duration).with_fps(FPS)
     return clip
 
 
