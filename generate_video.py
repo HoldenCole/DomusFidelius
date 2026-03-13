@@ -1,10 +1,10 @@
 """
 generate_video.py
 -----------------
-Catholic / Western Civilization TikTok Video Generator
+Catholic TikTok Video Generator — "The Mass That Built the West"
 
-Uses local Marian artwork images with Ken Burns (pan/zoom) effects
-instead of stock footage from Pexels.
+Uses Traditional Latin Mass photographs as still images with warm
+color grading, text overlays, and crossfade transitions.
 
 Usage:
     python generate_video.py
@@ -59,65 +59,74 @@ FPS = 30
 CROSSFADE_DURATION = 0.4
 
 # ─── Scene Definitions ────────────────────────────────────────────────────────
-# Each scene uses a local image file with a Ken Burns motion direction.
-# Ken Burns "direction" controls how the camera moves:
-#   "zoom_in"   — starts wide, slowly zooms into center
-#   "zoom_out"  — starts tight on center, pulls out
-#   "pan_up"    — slow upward pan
-#   "pan_down"  — slow downward pan
-#   "pan_left"  — slow leftward pan
-#   "pan_right" — slow rightward pan
+# "The Mass That Built the West" — TLM photography, still images.
+# Text sequence follows the CLAUDE.md specification.
+#
+# Photos:
+#   IMG_7653.jpeg — Elevation of the Host (Solemn High Mass, ornate vestments)
+#   IMG_7655.jpeg — Procession with crucifix, altar boys, incense, dramatic light
+#   IMG_7656.jpeg — Priests kneeling before ornate altarpiece, golden light rays
+#   IMG_7657.jpeg — Priests censing at baroque altar, incense rising
 
 SCENES = [
     {
-        "id": "our_lady_of_sorrows",
-        "image": "IMG_7648.jpeg",
-        "ken_burns": "zoom_in",
-        "text": "Behold thy Mother",
-        "text_size": 90,
+        "id": "for_1500_years",
+        "image": "IMG_7656.jpeg",
+        "text": "For over 1,500 years\u2026",
+        "text_size": 85,
         "text_color": "white",
         "duration": 4.0,
     },
     {
-        "id": "mystical_rose",
-        "image": "IMG_7649.jpeg",
-        "ken_burns": "pan_up",
-        "text": "Full of Grace",
-        "text_size": 90,
+        "id": "mass_of_the_west",
+        "image": "IMG_7653.jpeg",
+        "text": "This was the Mass\nof the West.",
+        "text_size": 85,
         "text_color": "white",
         "duration": 4.0,
     },
     {
-        "id": "virgin_in_prayer",
-        "image": "IMG_7650.jpeg",
-        "ken_burns": "zoom_in",
-        "text": "Pray for us sinners",
+        "id": "monks_prayed_it",
+        "image": "IMG_7655.jpeg",
+        "text": "Monks prayed it.",
         "text_size": 90,
         "text_color": "white",
-        "duration": 4.0,
+        "duration": 3.5,
     },
     {
-        "id": "immaculate_heart",
-        "image": "IMG_7651.jpeg",
-        "ken_burns": "zoom_out",
-        "text": "Immaculate Heart",
+        "id": "saints_worshiped",
+        "image": "IMG_7657.jpeg",
+        "text": "Saints worshiped\nthis way.",
         "text_size": 90,
         "text_color": "white",
-        "duration": 4.0,
+        "duration": 3.5,
     },
     {
-        "id": "assumption",
-        "image": "IMG_7652.jpeg",
-        "ken_burns": "pan_down",
-        "text": "Ave Maria\nGratia Plena",
-        "text_subtitle": "The mother who intercedes for the West.",
-        "text_size": 90,
+        "id": "saints_names",
+        "image": "IMG_7653.jpeg",
+        "text_sequence": [
+            ("Augustine", 0.9),
+            ("Thomas Aquinas", 0.9),
+            ("Joan of Arc", 0.9),
+            ("Padre Pio", 0.9),
+        ],
+        "text_size": 95,
+        "text_color": "white",
+        "duration": 3.6,
+    },
+    {
+        "id": "lex_orandi",
+        "image": "IMG_7656.jpeg",
+        "text": "Lex Orandi\nLex Credendi",
+        "text_subtitle": "The Mass that built the West.",
+        "text_size": 95,
         "text_color": "gold",
-        "duration": 5.0,
+        "duration": 4.5,
     },
 ]
 
-# ─── Ken Burns Effect ─────────────────────────────────────────────────────────
+
+# ─── Still Image Clip ────────────────────────────────────────────────────────
 
 def load_and_prepare_image(image_path: Path) -> np.ndarray:
     """Load image, convert to RGB numpy array."""
@@ -125,111 +134,34 @@ def load_and_prepare_image(image_path: Path) -> np.ndarray:
     return np.array(img)
 
 
-def crop_and_resize(img_array: np.ndarray, cx: float, cy: float,
-                    crop_w: float, crop_h: float,
-                    out_w: int, out_h: int) -> np.ndarray:
-    """Crop a region from img_array and resize to output dimensions."""
+def center_crop_to_aspect(img_array: np.ndarray,
+                          out_w: int, out_h: int) -> np.ndarray:
+    """Center-crop image to target aspect ratio, then resize."""
     h, w = img_array.shape[:2]
+    target_ratio = out_w / out_h
+    img_ratio = w / h
 
-    # Convert fractional coords to pixel coords
-    x1 = int(cx * w - crop_w * w / 2)
-    y1 = int(cy * h - crop_h * h / 2)
-    x2 = int(cx * w + crop_w * w / 2)
-    y2 = int(cy * h + crop_h * h / 2)
+    if img_ratio > target_ratio:
+        # Image is wider — crop width
+        new_w = int(h * target_ratio)
+        x1 = (w - new_w) // 2
+        cropped = img_array[:, x1:x1 + new_w]
+    else:
+        # Image is taller — crop height
+        new_h = int(w / target_ratio)
+        y1 = (h - new_h) // 2
+        cropped = img_array[y1:y1 + new_h, :]
 
-    # Clamp to image bounds
-    x1 = max(0, x1)
-    y1 = max(0, y1)
-    x2 = min(w, x2)
-    y2 = min(h, y2)
-
-    cropped = img_array[y1:y2, x1:x2]
     pil_img = Image.fromarray(cropped)
     pil_img = pil_img.resize((out_w, out_h), Image.LANCZOS)
     return np.array(pil_img)
 
 
-def make_ken_burns_clip(image_path: Path, duration: float,
-                        direction: str) -> ImageClip:
-    """Create a Ken Burns (pan/zoom) clip from a static image.
-
-    The image is loaded once, then each frame crops a smoothly animated
-    region and scales it to the output resolution.
-    """
+def make_still_clip(image_path: Path, duration: float):
+    """Create a still (non-moving) clip from a photograph."""
     img_array = load_and_prepare_image(image_path)
-    img_h, img_w = img_array.shape[:2]
-
-    # Target aspect ratio for the crop window (9:16)
-    target_ratio = VIDEO_WIDTH / VIDEO_HEIGHT
-
-    # The image aspect ratio determines whether we're width- or height-limited
-    img_ratio = img_w / img_h
-
-    if img_ratio > target_ratio:
-        # Image is wider than 9:16 — height-limited
-        base_crop_h = 1.0
-        base_crop_w = (target_ratio / img_ratio)
-    else:
-        # Image is taller than 9:16 — width-limited
-        base_crop_w = 1.0
-        base_crop_h = (img_ratio / target_ratio)
-
-    # Ken Burns zoom factor (how much to zoom over the clip duration)
-    zoom_amount = 0.10  # 10% zoom range
-
-    # Define start and end states based on direction
-    if direction == "zoom_in":
-        start_scale = 1.0
-        end_scale = 1.0 - zoom_amount
-        start_cx, start_cy = 0.5, 0.5
-        end_cx, end_cy = 0.5, 0.5
-    elif direction == "zoom_out":
-        start_scale = 1.0 - zoom_amount
-        end_scale = 1.0
-        start_cx, start_cy = 0.5, 0.5
-        end_cx, end_cy = 0.5, 0.5
-    elif direction == "pan_up":
-        start_scale = 1.0 - zoom_amount * 0.5
-        end_scale = start_scale
-        start_cx, start_cy = 0.5, 0.55
-        end_cx, end_cy = 0.5, 0.40
-    elif direction == "pan_down":
-        start_scale = 1.0 - zoom_amount * 0.5
-        end_scale = start_scale
-        start_cx, start_cy = 0.5, 0.40
-        end_cx, end_cy = 0.5, 0.55
-    elif direction == "pan_left":
-        start_scale = 1.0 - zoom_amount * 0.5
-        end_scale = start_scale
-        start_cx, start_cy = 0.55, 0.5
-        end_cx, end_cy = 0.40, 0.5
-    elif direction == "pan_right":
-        start_scale = 1.0 - zoom_amount * 0.5
-        end_scale = start_scale
-        start_cx, start_cy = 0.40, 0.5
-        end_cx, end_cy = 0.55, 0.5
-    else:
-        start_scale = 1.0
-        end_scale = 1.0
-        start_cx, start_cy = 0.5, 0.5
-        end_cx, end_cy = 0.5, 0.5
-
-    def make_frame(t):
-        progress = t / duration if duration > 0 else 0
-        # Ease in-out for smoother motion
-        progress = 0.5 - 0.5 * np.cos(progress * np.pi)
-
-        scale = start_scale + (end_scale - start_scale) * progress
-        cx = start_cx + (end_cx - start_cx) * progress
-        cy = start_cy + (end_cy - start_cy) * progress
-
-        crop_w = base_crop_w * scale
-        crop_h = base_crop_h * scale
-
-        return crop_and_resize(img_array, cx, cy, crop_w, crop_h,
-                               VIDEO_WIDTH, VIDEO_HEIGHT)
-
-    clip = VideoClip(make_frame, duration=duration).with_fps(FPS)
+    frame = center_crop_to_aspect(img_array, VIDEO_WIDTH, VIDEO_HEIGHT)
+    clip = ImageClip(frame, duration=duration).with_fps(FPS)
     return clip
 
 
@@ -376,7 +308,6 @@ def make_text_clip(scene: dict, duration: float, w: int, h: int) -> ImageClip | 
     color = scene.get("text_color", "white")
 
     fade = 0.3
-    hold = max(duration - 2 * fade, 0.2)
 
     base_frame = render_text_frame(text, subtitle, w, h, font_size, color, 1.0)
     base_rgb = base_frame[:, :, :3]
@@ -392,6 +323,36 @@ def make_text_clip(scene: dict, duration: float, w: int, h: int) -> ImageClip | 
     ])
 
     return clip
+
+
+def make_text_sequence_clip(scene: dict, w: int, h: int):
+    """Create a clip with rapidly cycling saint names (text_sequence)."""
+    sequence = scene["text_sequence"]
+    font_size = scene.get("text_size", 90)
+    color = scene.get("text_color", "white")
+    total_duration = scene["duration"]
+
+    sub_clips = []
+    t = 0.0
+    for name, dur in sequence:
+        frame = render_text_frame(name, None, w, h, font_size, color, 1.0)
+        rgb = frame[:, :, :3]
+        mask = frame[:, :, 3].astype(np.float64) / 255.0
+
+        clip = ImageClip(rgb, duration=dur, transparent=False)
+        mask_clip = ImageClip(mask, duration=dur, is_mask=True)
+        clip = clip.with_mask(mask_clip)
+
+        fade = 0.15
+        clip = clip.with_effects([
+            CrossFadeIn(fade),
+            CrossFadeOut(fade),
+        ])
+        clip = clip.with_start(t)
+        sub_clips.append(clip)
+        t += dur
+
+    return CompositeVideoClip(sub_clips, size=(w, h)).with_duration(total_duration)
 
 
 # ─── Audio ────────────────────────────────────────────────────────────────────
@@ -420,11 +381,11 @@ def find_audio() -> Path | None:
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    print("\n Catholic TikTok Video Generator (Marian Artwork Edition)")
-    print("=" * 55)
+    print("\n Catholic TikTok Video Generator — The Mass That Built the West")
+    print("=" * 65)
 
-    # Step 1: Load images and create Ken Burns clips
-    print("\n Step 1: Building Ken Burns clips from artwork...")
+    # Step 1: Build still image clips
+    print("\n Step 1: Building still clips from TLM photography...")
     video_clips = []
     text_clips = []
 
@@ -441,19 +402,23 @@ def main():
             ).with_fps(FPS)
         else:
             print(f"  Processing: {scene_id} ({scene['image']}, "
-                  f"{scene['ken_burns']}, {scene['duration']}s)")
-            clip = make_ken_burns_clip(
-                image_path, scene["duration"], scene["ken_burns"]
-            )
+                  f"still, {scene['duration']}s)")
+            clip = make_still_clip(image_path, scene["duration"])
             # Apply color grade
             clip = clip.image_transform(apply_grade)
 
         video_clips.append(clip)
 
-        text_clip = make_text_clip(
-            scene, scene["duration"], VIDEO_WIDTH, VIDEO_HEIGHT
-        )
-        text_clips.append(text_clip)
+        # Handle text: either a single overlay or a rapid sequence
+        if "text_sequence" in scene:
+            tclip = make_text_sequence_clip(
+                scene, VIDEO_WIDTH, VIDEO_HEIGHT
+            )
+        else:
+            tclip = make_text_clip(
+                scene, scene["duration"], VIDEO_WIDTH, VIDEO_HEIGHT
+            )
+        text_clips.append(tclip)
 
         print(f"  Done: {scene_id}")
 
@@ -531,13 +496,6 @@ def main():
     except Exception as e:
         print(f"\n Export failed: {e}")
         raise
-
-    # Step 5: Git commit
-    print("\n Step 5: Committing to Git...")
-    date_str = datetime.now().strftime("%Y-%m-%d")
-    os.system('git add Videos/final_video.mp4')
-    os.system(f'git commit -m "Add Marian TikTok video - {date_str}"')
-    print("  Committed (run 'git push' manually to push to remote)")
 
     print("\n Done!\n")
 
