@@ -51,7 +51,7 @@ except ImportError:
 
 # ─── Configuration ────────────────────────────────────────────────────────────
 
-OUTPUT_DIR = Path("output")
+OUTPUT_DIR = Path("Videos")
 FOOTAGE_DIR = Path("assets/footage")
 AUDIO_DIR = Path("assets/audio")
 FONTS_DIR = Path("assets/fonts")
@@ -627,7 +627,7 @@ def main():
     # Step 6: Git commit
     print("\n📤 Step 6: Committing to Git...")
     date_str = datetime.now().strftime("%Y-%m-%d")
-    os.system('git add output/final_video.mp4')
+    os.system('git add Videos/final_video.mp4')
     os.system(f'git commit -m "Add Catholic TikTok video - {date_str}"')
     print("  ✅ Committed (run 'git push' manually to push to remote)")
 
