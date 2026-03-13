@@ -32,11 +32,13 @@ except ImportError:
     pass
 
 try:
-    from moviepy.editor import (
+    from moviepy import (
         VideoFileClip, AudioFileClip, CompositeVideoClip,
-        concatenate_videoclips, ColorClip, ImageClip
+        concatenate_videoclips, ColorClip, ImageClip,
+        concatenate_audioclips,
     )
-    from moviepy.video.fx.all import fadein, fadeout, crossfadein, crossfadeout
+    from moviepy.video.fx import CrossFadeIn, CrossFadeOut
+    from moviepy.audio.fx import AudioFadeIn, AudioFadeOut
 except ImportError:
     print("ERROR: moviepy not installed. Run: pip install moviepy")
     sys.exit(1)
@@ -407,20 +409,23 @@ def make_text_clip(scene: dict, duration: float, w: int, h: int) -> ImageClip | 
             alpha = 1.0
         return render_text_frame(text, subtitle, w, h, font_size, color, alpha)
 
-    clip = ImageClip(
-        lambda t: make_frame(t)[:, :, :3],  # RGB
-        duration=duration,
-        ismask=False
-    ).set_fps(FPS)
+    # Pre-render the full-alpha frame as the base image
+    base_frame = make_frame(1.0)
+    base_rgb = base_frame[:, :, :3]
+    base_mask = base_frame[:, :, 3].astype(np.float64) / 255.0
 
-    # Use alpha channel as mask
-    mask = ImageClip(
-        lambda t: make_frame(t)[:, :, 3:4] / 255.0,
-        duration=duration,
-        ismask=True
-    ).set_fps(FPS)
+    clip = ImageClip(base_rgb, duration=duration, transparent=False)
+    mask_clip = ImageClip(base_mask, duration=duration, is_mask=True)
 
-    return clip.set_mask(mask)
+    clip = clip.with_mask(mask_clip)
+
+    # Apply fade in/out via opacity
+    clip = clip.with_effects([
+        CrossFadeIn(fade),
+        CrossFadeOut(fade),
+    ])
+
+    return clip
 
 
 # ─── Audio ────────────────────────────────────────────────────────────────────
@@ -463,9 +468,9 @@ def process_clip(footage_path: Path, scene: dict) -> VideoFileClip | None:
     if clip.duration > target_duration + 1:
         max_start = clip.duration - target_duration
         start = random.uniform(0, min(max_start, clip.duration * 0.5))
-        clip = clip.subclip(start, start + target_duration)
+        clip = clip.subclipped(start, start + target_duration)
     else:
-        clip = clip.subclip(0, min(clip.duration, target_duration))
+        clip = clip.subclipped(0, min(clip.duration, target_duration))
 
     # Crop to 9:16
     src_ratio = clip.w / clip.h
@@ -475,17 +480,17 @@ def process_clip(footage_path: Path, scene: dict) -> VideoFileClip | None:
         # Wider than needed — crop sides
         new_w = int(clip.h * target_ratio)
         x1 = (clip.w - new_w) // 2
-        clip = clip.crop(x1=x1, y1=0, x2=x1 + new_w, y2=clip.h)
+        clip = clip.cropped(x1=x1, y1=0, x2=x1 + new_w, y2=clip.h)
     else:
         # Taller than needed — crop top/bottom
         new_h = int(clip.w / target_ratio)
         y1 = (clip.h - new_h) // 4  # slightly favor upper portion
-        clip = clip.crop(x1=0, y1=y1, x2=clip.w, y2=y1 + new_h)
+        clip = clip.cropped(x1=0, y1=y1, x2=clip.w, y2=y1 + new_h)
 
-    clip = clip.resize((VIDEO_WIDTH, VIDEO_HEIGHT))
+    clip = clip.resized((VIDEO_WIDTH, VIDEO_HEIGHT))
 
     # Apply color grade
-    clip = clip.fl_image(apply_grade)
+    clip = clip.image_transform(apply_grade)
 
     return clip
 
@@ -524,7 +529,7 @@ def main():
                 size=(VIDEO_WIDTH, VIDEO_HEIGHT),
                 color=[10, 8, 5],
                 duration=scene["duration"]
-            ).set_fps(FPS)
+            ).with_fps(FPS)
         else:
             clip = process_clip(footage_path, scene)
             if clip is None:
@@ -532,7 +537,7 @@ def main():
                     size=(VIDEO_WIDTH, VIDEO_HEIGHT),
                     color=[10, 8, 5],
                     duration=scene["duration"]
-                ).set_fps(FPS)
+                ).with_fps(FPS)
 
         video_clips.append(clip)
 
@@ -552,15 +557,18 @@ def main():
     t = 0
     for i, (vclip, tclip) in enumerate(zip(video_clips, text_clips)):
         # Apply crossfade in/out
+        effects = []
         if i > 0:
-            vclip = vclip.fx(crossfadein, CROSSFADE_DURATION)
+            effects.append(CrossFadeIn(CROSSFADE_DURATION))
         if i < len(video_clips) - 1:
-            vclip = vclip.fx(crossfadeout, CROSSFADE_DURATION)
+            effects.append(CrossFadeOut(CROSSFADE_DURATION))
+        if effects:
+            vclip = vclip.with_effects(effects)
 
-        vclip = vclip.set_start(t)
+        vclip = vclip.with_start(t)
 
         if tclip:
-            tclip = tclip.set_start(t)
+            tclip = tclip.with_start(t)
             final_clips.append(vclip)
             final_clips.append(tclip)
         else:
@@ -581,20 +589,22 @@ def main():
             # Loop if needed
             if audio.duration < vid_duration:
                 loops = int(np.ceil(vid_duration / audio.duration))
-                from moviepy.audio.AudioClip import concatenate_audioclips
                 audio = concatenate_audioclips([audio] * loops)
 
-            audio = audio.subclip(0, vid_duration)
+            audio = audio.subclipped(0, vid_duration)
 
             # Fade in and out
-            audio = audio.audio_fadein(3.0).audio_fadeout(3.0)
-            final_video = final_video.set_audio(audio)
+            audio = audio.with_effects([
+                AudioFadeIn(3.0),
+                AudioFadeOut(3.0),
+            ])
+            final_video = final_video.with_audio(audio)
             print(f"  ✅ Audio: {audio_path.name}")
         except Exception as e:
             print(f"  ❌ Audio failed: {e}")
 
     # Step 5: Export
-    output_path = OUTPUT_DIR / f"final_video.mp4"
+    output_path = OUTPUT_DIR / "final_video.mp4"
     print(f"\n💾 Step 5: Exporting to {output_path}...")
     print(f"   Duration: {final_video.duration:.1f}s")
 
@@ -615,12 +625,11 @@ def main():
         raise
 
     # Step 6: Git commit
-    print("\n📤 Step 6: Committing to GitHub...")
+    print("\n📤 Step 6: Committing to Git...")
     date_str = datetime.now().strftime("%Y-%m-%d")
-    os.system(f'git add output/final_video.mp4')
+    os.system('git add output/final_video.mp4')
     os.system(f'git commit -m "Add Catholic TikTok video - {date_str}"')
-    os.system(f'git push origin main')
-    print("  ✅ Pushed to GitHub")
+    print("  ✅ Committed (run 'git push' manually to push to remote)")
 
     print("\n🏁 Done!\n")
 
