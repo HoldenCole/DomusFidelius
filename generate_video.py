@@ -1,21 +1,28 @@
 """
 generate_video.py
 -----------------
-Catholic TikTok Video Generator — "The Mass That Built the West"
+Catholic TikTok Video Generator
 
-Uses Traditional Latin Mass photographs as still images with warm
-color grading, text overlays, and crossfade transitions.
+Supports two image source modes:
+  1. Local images   — "image": "IMG_7653.jpeg" in assets/images/
+  2. Pinterest       — "pinterest_query": "traditional latin mass elevation"
+                       Downloads and caches in assets/pinterest/
+
+Pinterest images are fetched via pinterest-dl (pip install pinterest-dl).
+If Pinterest fails or is unavailable, falls back to local images.
 
 Usage:
     python generate_video.py
 
 Requirements:
-    pip install moviepy pillow numpy python-dotenv
+    pip install moviepy pillow numpy python-dotenv pinterest-dl
     ffmpeg must be installed on your system
 """
 
 import os
 import sys
+import json
+import hashlib
 import numpy as np
 from pathlib import Path
 from datetime import datetime
@@ -44,34 +51,47 @@ except ImportError:
     print("ERROR: Pillow not installed. Run: pip install pillow")
     sys.exit(1)
 
+# Pinterest is optional — graceful fallback if not installed
+try:
+    from pinterest_dl import PinterestDL
+    HAS_PINTEREST = True
+except ImportError:
+    HAS_PINTEREST = False
+
 # ─── Configuration ────────────────────────────────────────────────────────────
 
 OUTPUT_DIR = Path("Videos")
 IMAGES_DIR = Path("assets/images")
+PINTEREST_DIR = Path("assets/pinterest")
 AUDIO_DIR = Path("assets/audio")
 FONTS_DIR = Path("assets/fonts")
 
 OUTPUT_DIR.mkdir(exist_ok=True)
+PINTEREST_DIR.mkdir(parents=True, exist_ok=True)
 
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
 CROSSFADE_DURATION = 0.4
 
+# Minimum resolution for Pinterest images (width, height)
+PINTEREST_MIN_RES = (640, 640)
+# Number of Pinterest results to fetch per query (picks the best one)
+PINTEREST_NUM_RESULTS = 8
+
 # ─── Scene Definitions ────────────────────────────────────────────────────────
-# "The Mass That Built the West" — TLM photography, still images.
-# Text sequence follows the CLAUDE.md specification.
+# Each scene can use either:
+#   "image": "filename.jpeg"              — local file in assets/images/
+#   "pinterest_query": "search terms"     — search Pinterest, cache result
+#   Both (pinterest_query + image)        — try Pinterest first, fall back to local
 #
-# Photos:
-#   IMG_7653.jpeg — Elevation of the Host (Solemn High Mass, ornate vestments)
-#   IMG_7655.jpeg — Procession with crucifix, altar boys, incense, dramatic light
-#   IMG_7656.jpeg — Priests kneeling before ornate altarpiece, golden light rays
-#   IMG_7657.jpeg — Priests censing at baroque altar, incense rising
+# "The Mass That Built the West" — TLM photography, still images.
 
 SCENES = [
     {
         "id": "for_1500_years",
         "image": "IMG_7656.jpeg",
+        "pinterest_query": "traditional latin mass cathedral candlelight",
         "text": "For over 1,500 years\u2026",
         "text_size": 85,
         "text_color": "white",
@@ -80,6 +100,7 @@ SCENES = [
     {
         "id": "mass_of_the_west",
         "image": "IMG_7653.jpeg",
+        "pinterest_query": "solemn high mass elevation host",
         "text": "This was the Mass\nof the West.",
         "text_size": 85,
         "text_color": "white",
@@ -88,6 +109,7 @@ SCENES = [
     {
         "id": "monks_prayed_it",
         "image": "IMG_7655.jpeg",
+        "pinterest_query": "benedictine monks choir chanting",
         "text": "Monks prayed it.",
         "text_size": 90,
         "text_color": "white",
@@ -96,6 +118,7 @@ SCENES = [
     {
         "id": "saints_worshiped",
         "image": "IMG_7657.jpeg",
+        "pinterest_query": "incense catholic mass altar",
         "text": "Saints worshiped\nthis way.",
         "text_size": 90,
         "text_color": "white",
@@ -104,6 +127,7 @@ SCENES = [
     {
         "id": "saints_names",
         "image": "IMG_7653.jpeg",
+        "pinterest_query": "catholic saints stained glass",
         "text_sequence": [
             ("Augustine", 0.9),
             ("Thomas Aquinas", 0.9),
@@ -117,6 +141,7 @@ SCENES = [
     {
         "id": "lex_orandi",
         "image": "IMG_7656.jpeg",
+        "pinterest_query": "gothic cathedral altar golden light",
         "text": "Lex Orandi\nLex Credendi",
         "text_subtitle": "The Mass that built the West.",
         "text_size": 95,
@@ -124,6 +149,144 @@ SCENES = [
         "duration": 4.5,
     },
 ]
+
+
+# ─── Pinterest Sourcing ──────────────────────────────────────────────────────
+
+def _query_cache_key(query: str) -> str:
+    """Deterministic filename-safe hash for a Pinterest query."""
+    return hashlib.sha256(query.encode()).hexdigest()[:16]
+
+
+def _load_pinterest_cache() -> dict:
+    """Load the Pinterest cache index (query -> local filename)."""
+    cache_file = PINTEREST_DIR / "_cache.json"
+    if cache_file.exists():
+        with open(cache_file) as f:
+            return json.load(f)
+    return {}
+
+
+def _save_pinterest_cache(cache: dict):
+    """Persist the Pinterest cache index."""
+    cache_file = PINTEREST_DIR / "_cache.json"
+    with open(cache_file, "w") as f:
+        json.dump(cache, f, indent=2)
+
+
+def fetch_pinterest_image(query: str) -> Path | None:
+    """Search Pinterest for a query, download the best image, cache it.
+
+    Returns the local Path to the cached image, or None on failure.
+    """
+    if not HAS_PINTEREST:
+        print(f"    pinterest-dl not installed — skipping Pinterest")
+        return None
+
+    cache = _load_pinterest_cache()
+    cache_key = _query_cache_key(query)
+
+    # Check cache first
+    if cache_key in cache:
+        cached_path = PINTEREST_DIR / cache[cache_key]
+        if cached_path.exists():
+            print(f"    Pinterest cache hit: {cached_path.name}")
+            return cached_path
+        else:
+            # Cache entry is stale, remove it
+            del cache[cache_key]
+
+    print(f"    Pinterest search: \"{query}\"")
+    try:
+        scraper = PinterestDL.with_api(
+            timeout=15,
+            verbose=False,
+            max_retries=3,
+            retry_delay=1.0,
+        )
+
+        media_list = scraper.search(
+            query=query,
+            num=PINTEREST_NUM_RESULTS,
+            min_resolution=PINTEREST_MIN_RES,
+            delay=0.3,
+        )
+
+        if not media_list:
+            print(f"    No Pinterest results for: \"{query}\"")
+            return None
+
+        # Pick the highest-resolution image
+        best = max(media_list, key=lambda m: m.resolution[0] * m.resolution[1])
+        print(f"    Found: {best.resolution[0]}x{best.resolution[1]} "
+              f"(pin #{best.id})")
+
+        # Download the image directly via requests
+        import requests
+        img_url = best.src
+        print(f"    Downloading: {img_url[:80]}...")
+        resp = requests.get(img_url, timeout=15, headers={
+            "User-Agent": (
+                "Mozilla/5.0 (Windows NT 10.0; Win64; x64) "
+                "AppleWebKit/537.36 (KHTML, like Gecko) "
+                "Chrome/120.0.0.0 Safari/537.36"
+            ),
+        })
+        resp.raise_for_status()
+
+        # Determine extension from content type or URL
+        content_type = resp.headers.get("content-type", "")
+        if "png" in content_type:
+            ext = ".png"
+        elif "webp" in content_type:
+            ext = ".webp"
+        else:
+            ext = ".jpg"
+
+        stable_name = f"{cache_key}{ext}"
+        stable_path = PINTEREST_DIR / stable_name
+        stable_path.write_bytes(resp.content)
+
+        # Convert webp to jpg for compatibility
+        if ext == ".webp":
+            jpg_name = f"{cache_key}.jpg"
+            jpg_path = PINTEREST_DIR / jpg_name
+            Image.open(stable_path).convert("RGB").save(jpg_path, "JPEG", quality=95)
+            stable_path.unlink()
+            stable_path = jpg_path
+            stable_name = jpg_name
+
+        cache[cache_key] = stable_name
+        _save_pinterest_cache(cache)
+
+        print(f"    Saved: {stable_path.name} "
+              f"({stable_path.stat().st_size // 1024} KB)")
+        return stable_path
+
+    except Exception as e:
+        print(f"    Pinterest error: {e}")
+        return None
+
+
+def resolve_scene_image(scene: dict) -> Path | None:
+    """Resolve a scene's image: try Pinterest first, then local fallback."""
+    pinterest_query = scene.get("pinterest_query")
+    local_image = scene.get("image")
+
+    # Try Pinterest if a query is provided
+    if pinterest_query:
+        path = fetch_pinterest_image(pinterest_query)
+        if path:
+            return path
+
+    # Fall back to local image
+    if local_image:
+        local_path = IMAGES_DIR / local_image
+        if local_path.exists():
+            print(f"    Using local: {local_image}")
+            return local_path
+
+    return None
 
 
 # ─── Still Image Clip ────────────────────────────────────────────────────────
@@ -142,12 +305,10 @@ def center_crop_to_aspect(img_array: np.ndarray,
     img_ratio = w / h
 
     if img_ratio > target_ratio:
-        # Image is wider — crop width
         new_w = int(h * target_ratio)
         x1 = (w - new_w) // 2
         cropped = img_array[:, x1:x1 + new_w]
     else:
-        # Image is taller — crop height
         new_h = int(w / target_ratio)
         y1 = (h - new_h) // 2
         cropped = img_array[y1:y1 + new_h, :]
@@ -381,30 +542,34 @@ def find_audio() -> Path | None:
 # ─── Main ─────────────────────────────────────────────────────────────────────
 
 def main():
-    print("\n Catholic TikTok Video Generator — The Mass That Built the West")
+    print("\n Catholic TikTok Video Generator")
     print("=" * 65)
 
-    # Step 1: Build still image clips
-    print("\n Step 1: Building still clips from TLM photography...")
+    if HAS_PINTEREST:
+        print("  Pinterest sourcing: ENABLED")
+    else:
+        print("  Pinterest sourcing: DISABLED (pip install pinterest-dl)")
+
+    # Step 1: Resolve images and build clips
+    print("\n Step 1: Resolving images and building clips...")
     video_clips = []
     text_clips = []
 
     for scene in SCENES:
         scene_id = scene["id"]
-        image_path = IMAGES_DIR / scene["image"]
+        print(f"  Scene: {scene_id}")
 
-        if not image_path.exists():
-            print(f"  Warning: Missing image {image_path} — using dark frame")
+        image_path = resolve_scene_image(scene)
+
+        if image_path is None:
+            print(f"    No image available — using dark frame")
             clip = ColorClip(
                 size=(VIDEO_WIDTH, VIDEO_HEIGHT),
                 color=[10, 8, 5],
                 duration=scene["duration"]
             ).with_fps(FPS)
         else:
-            print(f"  Processing: {scene_id} ({scene['image']}, "
-                  f"still, {scene['duration']}s)")
             clip = make_still_clip(image_path, scene["duration"])
-            # Apply color grade
             clip = clip.image_transform(apply_grade)
 
         video_clips.append(clip)
@@ -420,7 +585,7 @@ def main():
             )
         text_clips.append(tclip)
 
-        print(f"  Done: {scene_id}")
+        print(f"    Done")
 
     # Step 2: Assemble with crossfades
     print("\n Step 2: Assembling with crossfade transitions...")
