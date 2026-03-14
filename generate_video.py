@@ -72,7 +72,7 @@ PINTEREST_DIR.mkdir(parents=True, exist_ok=True)
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
-CROSSFADE_DURATION = 0.4
+CROSSFADE_DURATION = 0.5
 
 # Minimum resolution for Pinterest images (width, height)
 PINTEREST_MIN_RES = (640, 640)
@@ -85,68 +85,137 @@ PINTEREST_NUM_RESULTS = 8
 #   "pinterest_query": "search terms"     — search Pinterest, cache result
 #   Both (pinterest_query + image)        — try Pinterest first, fall back to local
 #
-# "The Mass That Built the West" — TLM photography, still images.
+# "Martyrs of the Faith" — rapid-fire montage, 0.5-1s transitions.
+# Each martyr: name + how they died, still image from Pinterest.
 
 SCENES = [
+    # ── Intro card ──
     {
-        "id": "for_1500_years",
-        "image": "IMG_7656.jpeg",
-        "pinterest_query": "traditional latin mass cathedral candlelight",
-        "text": "For over 1,500 years\u2026",
-        "text_size": 85,
-        "text_color": "white",
-        "duration": 4.0,
-    },
-    {
-        "id": "mass_of_the_west",
-        "image": "IMG_7653.jpeg",
-        "pinterest_query": "solemn high mass elevation host",
-        "text": "This was the Mass\nof the West.",
-        "text_size": 85,
-        "text_color": "white",
-        "duration": 4.0,
-    },
-    {
-        "id": "monks_prayed_it",
-        "image": "IMG_7655.jpeg",
-        "pinterest_query": "benedictine monks choir chanting",
-        "text": "Monks prayed it.",
-        "text_size": 90,
-        "text_color": "white",
-        "duration": 3.5,
-    },
-    {
-        "id": "saints_worshiped",
-        "image": "IMG_7657.jpeg",
-        "pinterest_query": "incense catholic mass altar",
-        "text": "Saints worshiped\nthis way.",
-        "text_size": 90,
-        "text_color": "white",
-        "duration": 3.5,
-    },
-    {
-        "id": "saints_names",
-        "image": "IMG_7653.jpeg",
-        "pinterest_query": "catholic saints stained glass",
-        "text_sequence": [
-            ("Augustine", 0.9),
-            ("Thomas Aquinas", 0.9),
-            ("Joan of Arc", 0.9),
-            ("Padre Pio", 0.9),
-        ],
-        "text_size": 95,
-        "text_color": "white",
-        "duration": 3.6,
-    },
-    {
-        "id": "lex_orandi",
-        "image": "IMG_7656.jpeg",
-        "pinterest_query": "gothic cathedral altar golden light",
-        "text": "Lex Orandi\nLex Credendi",
-        "text_subtitle": "The Mass that built the West.",
+        "id": "intro",
+        "pinterest_query": "colosseum rome oil painting classical art",
+        "text": "Martyrs of the Faith",
         "text_size": 95,
         "text_color": "gold",
-        "duration": 4.5,
+        "duration": 2.5,
+    },
+    # ── The Martyrs ──
+    {
+        "id": "st_stephen",
+        "pinterest_query": "stoning of saint stephen baroque painting art",
+        "text": "St. Stephen",
+        "text_subtitle": "Stoned to death  \u2020 33 AD",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_peter",
+        "pinterest_query": "crucifixion of saint peter caravaggio painting",
+        "text": "St. Peter",
+        "text_subtitle": "Crucified upside down  \u2020 64 AD",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_paul",
+        "pinterest_query": "beheading of saint paul renaissance painting art",
+        "text": "St. Paul",
+        "text_subtitle": "Beheaded  \u2020 67 AD",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_lawrence",
+        "pinterest_query": "martyrdom of saint lawrence gridiron baroque oil painting",
+        "text": "St. Lawrence",
+        "text_subtitle": "Burned on a gridiron  \u2020 258 AD",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_sebastian",
+        "pinterest_query": "saint sebastian tied arrows renaissance oil painting",
+        "text": "St. Sebastian",
+        "text_subtitle": "Shot with arrows  \u2020 288 AD",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_agnes",
+        "pinterest_query": "saint agnes virgin martyr classical oil painting",
+        "text": "St. Agnes",
+        "text_subtitle": "Beheaded at age 12  \u2020 304 AD",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_bartholomew",
+        "pinterest_query": "martyrdom of saint bartholomew flayed renaissance painting",
+        "text": "St. Bartholomew",
+        "text_subtitle": "Flayed alive  \u2020 1st century",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_thomas_becket",
+        "pinterest_query": "murder of thomas becket cathedral medieval painting",
+        "text": "St. Thomas Becket",
+        "text_subtitle": "Murdered in his cathedral  \u2020 1170",
+        "text_size": 80,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_joan_of_arc",
+        "pinterest_query": "joan of arc at the stake classical oil painting art",
+        "text": "St. Joan of Arc",
+        "text_subtitle": "Burned at the stake  \u2020 1431",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_thomas_more",
+        "pinterest_query": "saint thomas more portrait holbein painting",
+        "text": "St. Thomas More",
+        "text_subtitle": "Beheaded  \u2020 1535",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_isaac_jogues",
+        "pinterest_query": "north american martyrs jesuits painting classical art",
+        "text": "St. Isaac Jogues",
+        "text_subtitle": "Tomahawked  \u2020 1646",
+        "text_size": 85,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    {
+        "id": "st_maximilian_kolbe",
+        "pinterest_query": "maximilian kolbe priest auschwitz catholic saint",
+        "text": "St. Maximilian Kolbe",
+        "text_subtitle": "Starved in Auschwitz  \u2020 1941",
+        "text_size": 80,
+        "text_color": "white",
+        "duration": 2.0,
+    },
+    # ── Closing card ──
+    {
+        "id": "closing",
+        "pinterest_query": "crucifix golden light cathedral painting",
+        "text": "The blood of martyrs\nis the seed of the Church.",
+        "text_subtitle": "Tertullian",
+        "text_size": 75,
+        "text_color": "gold",
+        "duration": 3.5,
     },
 ]
 
@@ -216,13 +285,30 @@ def fetch_pinterest_image(query: str) -> Path | None:
             print(f"    No Pinterest results for: \"{query}\"")
             return None
 
-        # Pick the highest-resolution image
-        best = max(media_list, key=lambda m: m.resolution[0] * m.resolution[1])
+        # Filter out unsupported formats (heic, heif, svg, gif)
+        import requests
+        unsupported = (".heic", ".heif", ".svg", ".gif")
+        candidates = sorted(
+            media_list,
+            key=lambda m: m.resolution[0] * m.resolution[1],
+            reverse=True,
+        )
+        best = None
+        for candidate in candidates:
+            url_lower = candidate.src.lower()
+            if any(url_lower.endswith(ext) for ext in unsupported):
+                continue
+            best = candidate
+            break
+
+        if best is None:
+            print(f"    No compatible image format found")
+            return None
+
         print(f"    Found: {best.resolution[0]}x{best.resolution[1]} "
               f"(pin #{best.id})")
 
         # Download the image directly via requests
-        import requests
         img_url = best.src
         print(f"    Downloading: {img_url[:80]}...")
         resp = requests.get(img_url, timeout=15, headers={
@@ -236,9 +322,9 @@ def fetch_pinterest_image(query: str) -> Path | None:
 
         # Determine extension from content type or URL
         content_type = resp.headers.get("content-type", "")
-        if "png" in content_type:
+        if "png" in content_type or img_url.lower().endswith(".png"):
             ext = ".png"
-        elif "webp" in content_type:
+        elif "webp" in content_type or img_url.lower().endswith(".webp"):
             ext = ".webp"
         else:
             ext = ".jpg"
@@ -247,14 +333,22 @@ def fetch_pinterest_image(query: str) -> Path | None:
         stable_path = PINTEREST_DIR / stable_name
         stable_path.write_bytes(resp.content)
 
-        # Convert webp to jpg for compatibility
-        if ext == ".webp":
+        # Convert webp/png to jpg for consistency
+        if ext in (".webp", ".png"):
             jpg_name = f"{cache_key}.jpg"
             jpg_path = PINTEREST_DIR / jpg_name
             Image.open(stable_path).convert("RGB").save(jpg_path, "JPEG", quality=95)
             stable_path.unlink()
             stable_path = jpg_path
             stable_name = jpg_name
+
+        # Verify the image can actually be opened
+        try:
+            Image.open(stable_path).convert("RGB")
+        except Exception:
+            print(f"    Downloaded file is not a valid image, removing")
+            stable_path.unlink()
+            return None
 
         cache[cache_key] = stable_name
         _save_pinterest_cache(cache)
