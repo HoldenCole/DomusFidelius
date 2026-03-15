@@ -85,118 +85,122 @@ PINTEREST_NUM_RESULTS = 8
 #   "pinterest_query": "search terms"     — search Pinterest, cache result
 #   Both (pinterest_query + image)        — try Pinterest first, fall back to local
 #
-# "Every Detail is Theology" — rapid-fire liturgical details montage.
-# Each detail: what it is + the theology behind it.
+# "Catholic Traditionalism" — painted scenes of traditional Catholic
+# family life, domestic prayer, community, building, working.
+# Same title text on every scene.
+
+_TITLE = "Catholic\nTraditionalism"
+_TITLE_SIZE = 95
+_TITLE_COLOR = "white"
 
 SCENES = [
-    # ── Intro card ──
+    # Good: mother praying at crucifix with baby in church
     {
-        "id": "intro",
-        "pinterest_query": "traditional latin mass altar close up photograph",
-        "text": "Every Detail\nis Theology.",
-        "text_size": 95,
-        "text_color": "gold",
+        "id": "mother_child_home",
+        "pinterest_query": "mother child prayer before meal painting catholic art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
-    # ── Liturgical Details ──
+    # Good: father walking with child on country path
     {
-        "id": "crucifix",
-        "pinterest_query": "altar crucifix catholic mass close up",
-        "text": "The Crucifix",
-        "text_subtitle": "Christ the eternal sacrifice, ever-present.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "family_church",
+        "pinterest_query": "family walking to church country road painting art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # Good: father reading to child at bedside
     {
-        "id": "six_candles",
-        "pinterest_query": "six altar candles traditional latin mass",
-        "text": "Six Candles",
-        "text_subtitle": "Christ, the Light of the World.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "father_children",
+        "pinterest_query": "father reading bible children fireplace painting art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # Good: Rockwell Freedom from Want - family at table
     {
-        "id": "chalice",
-        "pinterest_query": "golden chalice mass close up catholic",
-        "text": "The Chalice",
-        "text_subtitle": "The vessel of His Precious Blood.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "family_meal_grace",
+        "pinterest_query": "norman rockwell saying grace painting family meal",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # Good: classical mother holding child tenderly
     {
-        "id": "incense",
-        "pinterest_query": "incense thurible catholic mass smoke",
-        "text": "Incense",
-        "text_subtitle": "Our prayers rising to God. (Ps 141:2)",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "mother_baby",
+        "pinterest_query": "mother holding infant baby tender painting classical art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # Priest blessing family
     {
-        "id": "vestments",
-        "pinterest_query": "priest chasuble vestments traditional latin mass",
-        "text": "The Vestments",
-        "text_subtitle": "The priest clothed in Christ.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "priest_blessing",
+        "pinterest_query": "priest blessing family painting catholic traditional art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # Good: family walking to autumn village church
     {
-        "id": "altar_stone",
-        "pinterest_query": "catholic altar stone relic close up",
-        "text": "The Altar Stone",
-        "text_subtitle": "A relic of a martyr sealed within.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "village_church",
+        "pinterest_query": "people going into church sunday village painting traditional",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # New: grandmother with grandchildren
     {
-        "id": "bells",
-        "pinterest_query": "altar bells sanctus bells catholic mass",
-        "text": "The Bells",
-        "text_subtitle": "Heaven touches earth at the Consecration.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "grandmother",
+        "pinterest_query": "grandmother reading to grandchildren painting warm light",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # Good: warm barn at sunset
     {
-        "id": "tabernacle",
-        "pinterest_query": "tabernacle catholic church gold close up",
-        "text": "The Tabernacle",
-        "text_subtitle": "God dwelling among His people.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "building_together",
+        "pinterest_query": "men building barn raising community painting american art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # New: wedding at church
     {
-        "id": "sanctuary_lamp",
-        "pinterest_query": "sanctuary lamp red light catholic church",
-        "text": "The Sanctuary Lamp",
-        "text_subtitle": "He is here. The Real Presence.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "wedding",
+        "pinterest_query": "catholic wedding church ceremony painting traditional art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
+    # New: children playing in countryside
     {
-        "id": "paten",
-        "pinterest_query": "golden paten host communion catholic mass",
-        "text": "The Paten",
-        "text_subtitle": "Bearing the Lamb of God.",
-        "text_size": 85,
-        "text_color": "white",
+        "id": "children_playing",
+        "pinterest_query": "children playing countryside meadow painting 19th century art",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
         "duration": 2.5,
     },
-    # ── Closing card ──
+    # Family by fireplace
     {
-        "id": "closing",
-        "pinterest_query": "elevation of the host traditional latin mass",
-        "text": "Nothing is arbitrary.\nEverything points to Him.",
-        "text_size": 75,
-        "text_color": "gold",
-        "duration": 3.5,
+        "id": "family_fireplace",
+        "pinterest_query": "family sitting fireplace evening cozy painting warm light",
+        "text": _TITLE,
+        "text_size": _TITLE_SIZE,
+        "text_color": _TITLE_COLOR,
+        "duration": 2.5,
     },
 ]
 
