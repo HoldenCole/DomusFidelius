@@ -72,7 +72,7 @@ PINTEREST_DIR.mkdir(parents=True, exist_ok=True)
 VIDEO_WIDTH = 1080
 VIDEO_HEIGHT = 1920
 FPS = 30
-CROSSFADE_DURATION = 0.5
+CROSSFADE_DURATION = 0.8
 
 # Minimum resolution for Pinterest images (width, height)
 PINTEREST_MIN_RES = (640, 640)
@@ -85,122 +85,64 @@ PINTEREST_NUM_RESULTS = 8
 #   "pinterest_query": "search terms"     — search Pinterest, cache result
 #   Both (pinterest_query + image)        — try Pinterest first, fall back to local
 #
-# "Catholic Traditionalism" — painted scenes of traditional Catholic
-# family life, domestic prayer, community, building, working.
-# Same title text on every scene.
-
-_TITLE = "Catholic\nTraditionalism"
-_TITLE_SIZE = 95
-_TITLE_COLOR = "white"
+# "Jesus Edit" — slowed/reverb aesthetic
+# Quote: "I AM the way, the truth, and the life" — John 14:6
+# Vibe: moody, cinematic, dramatic paintings of Christ
 
 SCENES = [
-    # Good: mother praying at crucifix with baby in church
+    # Opening — dark, atmospheric
     {
-        "id": "mother_child_home",
-        "pinterest_query": "mother child prayer before meal painting catholic art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "jesus_face",
+        "pinterest_query": "Jesus Christ face painting classical dark background",
+        "text": "I AM",
+        "text_size": 120,
+        "text_color": "white",
+        "duration": 3.0,
     },
-    # Good: father walking with child on country path
     {
-        "id": "family_church",
-        "pinterest_query": "family walking to church country road painting art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "jesus_garden",
+        "pinterest_query": "Jesus praying garden gethsemane painting dark",
+        "text": "the way",
+        "text_size": 110,
+        "text_color": "white",
+        "duration": 3.0,
     },
-    # Good: father reading to child at bedside
     {
-        "id": "father_children",
-        "pinterest_query": "father reading bible children fireplace painting art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "jesus_teaching",
+        "pinterest_query": "Jesus Christ teaching disciples painting classical art",
+        "text": "the truth",
+        "text_size": 110,
+        "text_color": "white",
+        "duration": 3.0,
     },
-    # Good: Rockwell Freedom from Want - family at table
     {
-        "id": "family_meal_grace",
-        "pinterest_query": "norman rockwell saying grace painting family meal",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "jesus_healing",
+        "pinterest_query": "Jesus healing sick painting classical renaissance art",
+        "text": "and the life.",
+        "text_size": 110,
+        "text_color": "white",
+        "duration": 3.0,
     },
-    # Good: classical mother holding child tenderly
     {
-        "id": "mother_baby",
-        "pinterest_query": "mother holding infant baby tender painting classical art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "jesus_cross",
+        "pinterest_query": "Jesus carrying cross painting dark dramatic baroque",
+        "text": None,
+        "duration": 3.0,
     },
-    # Priest blessing family
     {
-        "id": "priest_blessing",
-        "pinterest_query": "priest blessing family painting catholic traditional art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "crucifixion",
+        "pinterest_query": "crucifixion Jesus Christ painting dramatic dark sky",
+        "text": None,
+        "duration": 3.5,
     },
-    # Good: family walking to autumn village church
     {
-        "id": "village_church",
-        "pinterest_query": "people going into church sunday village painting traditional",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
-    },
-    # New: grandmother with grandchildren
-    {
-        "id": "grandmother",
-        "pinterest_query": "grandmother reading to grandchildren painting warm light",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
-    },
-    # Good: warm barn at sunset
-    {
-        "id": "building_together",
-        "pinterest_query": "men building barn raising community painting american art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
-    },
-    # New: wedding at church
-    {
-        "id": "wedding",
-        "pinterest_query": "catholic wedding church ceremony painting traditional art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
-    },
-    # New: children playing in countryside
-    {
-        "id": "children_playing",
-        "pinterest_query": "children playing countryside meadow painting 19th century art",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
-    },
-    # Family by fireplace
-    {
-        "id": "family_fireplace",
-        "pinterest_query": "family sitting fireplace evening cozy painting warm light",
-        "text": _TITLE,
-        "text_size": _TITLE_SIZE,
-        "text_color": _TITLE_COLOR,
-        "duration": 2.5,
+        "id": "jesus_risen",
+        "pinterest_query": "risen Jesus Christ resurrection painting glorious light",
+        "text": "I AM the way,\nthe truth,\nand the life.",
+        "text_size": 85,
+        "text_color": "#D4AF37",
+        "text_subtitle": "— John 14:6",
+        "duration": 4.5,
     },
 ]
 
@@ -412,7 +354,7 @@ def build_vignette(width: int, height: int) -> np.ndarray:
     cx, cy = width / 2, height / 2
     Y, X = np.ogrid[:height, :width]
     dist = np.sqrt(((X - cx) / cx) ** 2 + ((Y - cy) / cy) ** 2)
-    vignette = np.clip(1 - dist * 0.55, 0.3, 1.0)
+    vignette = np.clip(1 - dist * 0.7, 0.2, 1.0)
     return vignette[:, :, np.newaxis].astype(np.float32)
 
 
@@ -423,15 +365,16 @@ def apply_grade(frame: np.ndarray) -> np.ndarray:
     global VIGNETTE
     frame = frame.astype(np.float32)
 
-    # Warm tone: boost red, reduce blue
-    frame[:, :, 0] = np.clip(frame[:, :, 0] * 1.12, 0, 255)
-    frame[:, :, 2] = np.clip(frame[:, :, 2] * 0.88, 0, 255)
+    # Desaturated warm — subtle warmth, muted tones for slowed/reverb vibe
+    frame[:, :, 0] = np.clip(frame[:, :, 0] * 1.06, 0, 255)  # Slight red
+    frame[:, :, 1] = np.clip(frame[:, :, 1] * 0.95, 0, 255)  # Pull green
+    frame[:, :, 2] = np.clip(frame[:, :, 2] * 0.85, 0, 255)  # Blue down
 
-    # Crush shadows (gamma)
-    frame = np.clip((frame / 255.0) ** 1.15 * 255, 0, 255)
+    # Heavy shadow crush — darker, moodier
+    frame = np.clip((frame / 255.0) ** 1.3 * 255, 0, 255)
 
-    # Film grain
-    grain = np.random.normal(0, 6, frame.shape).astype(np.float32)
+    # Film grain — slightly heavier
+    grain = np.random.normal(0, 8, frame.shape).astype(np.float32)
     frame = np.clip(frame + grain, 0, 255)
 
     # Vignette
@@ -547,7 +490,7 @@ def make_text_clip(scene: dict, duration: float, w: int, h: int) -> ImageClip | 
     font_size = scene.get("text_size", 80)
     color = scene.get("text_color", "white")
 
-    fade = 0.3
+    fade = 0.5
 
     base_frame = render_text_frame(text, subtitle, w, h, font_size, color, 1.0)
     base_rgb = base_frame[:, :, :3]
